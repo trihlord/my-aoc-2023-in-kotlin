@@ -1,17 +1,15 @@
 fun main() {
     fun part1(input: List<String>): Int {
         val maxCubes = mapOf("red" to 12, "green" to 13, "blue" to 14)
-        val emptyCubes = mapOf("red" to 0, "green" to 0, "blue" to 0)
         return input.fold(0) { acc, s ->
             val matchResult = Regex("^Game (\\d+): (.+)$").find(s) ?: return acc
-            val (gameId, cubesSubsets) = matchResult.groupValues.let { Pair(it[1].toInt(), it[2]) }
-            val gameCubes = cubesSubsets.split("; ", ", ")
-                .map { it.split(" ").let { (first, second) -> Pair(second, first.toInt()) } }
-                .fold(emptyCubes.toMutableMap()) { cubes, (color, count) ->
-                    cubes[color] = (cubes[color] ?: 0) + count
-                    cubes
-                }
-            val possible = maxCubes.all { (color, count) -> (gameCubes[color] ?: 0) <= count }
+            val gameId = matchResult.groupValues[1].toInt()
+            val possible = matchResult.groupValues[2].split("; ").all {
+                it.split(", ").associate { s ->
+                    val strings = s.split(" ")
+                    strings[1] to strings[0].toInt()
+                }.all { entry -> (maxCubes[entry.key] ?: 0) >= entry.value }
+            }
             if (possible) acc + gameId else acc
         }
     }
